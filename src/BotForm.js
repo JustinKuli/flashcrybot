@@ -9,15 +9,16 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
 let allVoices;
-let enVoices;
-let localVoices;
-let enVoice;
-
+let favVoice;
+ 
+// Sometimes, the first time the voices are retrieved, it's an empty list.
+// So, we need to refresh it sometimes in order to actually get it working.
 function refreshVoices() {
   allVoices = window.speechSynthesis.getVoices()
-  enVoices = allVoices.filter((v) => v.lang.startsWith('en'))
-  localVoices = enVoices.filter((v) => v.localService)
-  enVoice = localVoices[1] || localVoices[0] || enVoices[0]
+  const enVoices = allVoices.filter((v) => v.lang.startsWith('en'))
+  const localVoices = enVoices.filter((v) => v.localService)
+  const possibleFavorite = localVoices.filter((v) => v.voiceURI.includes('Zira'))
+  favVoice = possibleFavorite[0] || localVoices[0] || enVoices[0] || allVoices[0]
 }
 
 function handleMessage(chat, translator) {
@@ -25,7 +26,7 @@ function handleMessage(chat, translator) {
 
   const tts = (user, msg, lang) => {
     refreshVoices()
-    console.log('enVoice.name', enVoice?.name)
+    console.log('favVoice.name', favVoice?.name)
 
     if (msg.length > 100) {
       console.log(`message is too long to read out loud: ${msg}`)
@@ -34,10 +35,10 @@ function handleMessage(chat, translator) {
 
     let phrase = new SpeechSynthesisUtterance(`${user} - ${msg}`)
     if (lang === 'en') {
-      phrase.voice = enVoice
+      phrase.voice = favVoice
     } else {
       const langVoices = allVoices.filter((v) => v.lang.startsWith(lang))
-      phrase.voice = langVoices[0] || enVoice
+      phrase.voice = langVoices[0] || favVoice
     }
 
     window.speechSynthesis.speak(phrase)
