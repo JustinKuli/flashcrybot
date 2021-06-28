@@ -8,16 +8,17 @@ import { Translate } from '@google-cloud/translate/build/src/v2';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 
+import connection from './config/connection.js';
+import config from './config/bot-config.js';
+
 let allVoices;
 let favVoice;
  
-// Sometimes, the first time the voices are retrieved, it's an empty list.
-// So, we need to refresh it sometimes in order to actually get it working.
 function refreshVoices() {
   allVoices = window.speechSynthesis.getVoices()
   const enVoices = allVoices.filter((v) => v.lang.startsWith('en'))
   const localVoices = enVoices.filter((v) => v.localService)
-  const possibleFavorite = localVoices.filter((v) => v.voiceURI.includes('Zira'))
+  const possibleFavorite = allVoices.filter(config.favVoiceFilter)
   favVoice = possibleFavorite[0] || localVoices[0] || enVoices[0] || allVoices[0]
 }
 
@@ -25,15 +26,19 @@ function handleMessage(chat, translator) {
   refreshVoices()
 
   const tts = (user, msg, lang) => {
-    refreshVoices()
-    console.log('favVoice.name', favVoice?.name)
+    if (allVoices.length < config.targetVoiceCount) {
+      // Sometimes, the first time the voices are retrieved, it's an empty list.
+      refreshVoices()
+      console.log('favVoice.name', favVoice?.name)
+    }
 
-    if (msg.length > 100) {
+    if (msg.length > config.maxTTSLength) {
       console.log(`message is too long to read out loud: ${msg}`)
       return
     }
 
-    let phrase = new SpeechSynthesisUtterance(`${user} - ${msg}`)
+    const phraseWords = config.ttsSayUser ? `${user} - ${msg}` : msg
+    let phrase = new SpeechSynthesisUtterance(phraseWords)
     if (lang === 'en') {
       phrase.voice = favVoice
     } else {
@@ -45,37 +50,37 @@ function handleMessage(chat, translator) {
   }
 
   return (chan, user, msg) => {
-    if (user === "flashcrybot" || user === "zbarfbot") {
+    if (config.denylist.indexOf(user) !== -1) {
       return
     }
 
-    if (msg.startsWith('!tts')) {
-      chat.say(chan, "I am saying messages out loud");
-      return
+    for (const simple of config.simpleCommands) {
+      if (msg.startsWith(simple.cmd)) {
+        chat.say(chan, simple.resp)
+        return
+      }
     }
-    if (msg.startsWith('!translate')) {
-      chat.say(chan, "I am translating into English");
-      return
-    }
-
 
     translator.detect(msg, (err, det) => {
       if (err) {
         console.log(err)
         return
       }
-      // if (det.confidence > 0.6) {
-        tts(user, msg, det.language)
-        if (det.language !== "en") {
+      if (det.confidence > config.reqLangDetectionConfidence) {
+        if (det.language !== 'en') {
+          if (config.speakInForeignLanguage) {
+            tts(user, msg, det.language)
+          }
           translator.translate(msg, 'en').then((trans) => {
-            console.log(trans)
             chat.say(chan, `(${det.language} -> en) ${user}: ${trans[0]}`)
-            // tts(user, trans[0], 'en')
+            tts(user, trans[0], 'en')
           })
+        } else {
+          tts(user, msg, 'en')
         }
-      // } else {
-      //   console.log(`message from ${user} could not be understood: ${msg}`)
-      // }
+      } else {
+        console.log(`message from ${user} could not be understood: ${msg}`)
+      }
     })
   }
 }
@@ -120,7 +125,7 @@ class BotForm extends React.Component {
     return <Form>
       <Form.Group controlId="formStreamer">
         <Form.Label>Streamer Name</Form.Label>
-        <Form.Control type="text" placeholder="FlashcrySamurai" />
+        <Form.Control type="text" defaultValue="FlashcrySamurai" />
         <Form.Text className="text-muted">
             The bot will connect to this channel.
         </Form.Text>
@@ -128,7 +133,7 @@ class BotForm extends React.Component {
 
       <Form.Group controlId="formBotID">
         <Form.Label>Bot Client ID</Form.Label>
-        <Form.Control type="text" />
+        <Form.Control type="text" defaultValue={connection['bot-id']}/>
       </Form.Group>
 
       <Form.Group controlId="formBotAccessToken">
@@ -138,12 +143,12 @@ class BotForm extends React.Component {
 
       <Form.Group controlId="formGoogleProjectID">
         <Form.Label>Google Project ID</Form.Label>
-        <Form.Control type="text" />
+        <Form.Control type="text" defaultValue={connection['google-project-id']}/>
       </Form.Group>
 
       <Form.Group controlId="formGoogleMail">
         <Form.Label>Google Client Email</Form.Label>
-        <Form.Control type="text" />
+        <Form.Control type="text" defaultValue={connection['google-email']}/>
       </Form.Group>
 
       <Form.Group controlId="formGoogleKey">
