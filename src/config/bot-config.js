@@ -6,6 +6,8 @@ const props = {
     speakInForeignLanguage: true,
     repeatInEnglish: false,
     ttsSayUser: false,
+    replaceEmotes: true,
+    shortenLinks: true,
 
     denylist: [
         'flashcrybot',

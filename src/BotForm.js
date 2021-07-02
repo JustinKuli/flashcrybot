@@ -10,10 +10,11 @@ import Button from 'react-bootstrap/Button';
 
 import connection from './config/connection.js';
 import config from './config/bot-config.js';
+import emoteReplacements from './config/emote-replacement.js';
 
 let allVoices;
 let favVoice;
- 
+
 function refreshVoices() {
   allVoices = window.speechSynthesis.getVoices()
   const enVoices = allVoices.filter((v) => v.lang.startsWith('en'))
@@ -58,6 +59,23 @@ function handleMessage(chat, translator) {
       if (msg.startsWith(simple.cmd)) {
         chat.say(chan, simple.resp)
         return
+      }
+    }
+
+    if (config.replaceEmotes) {
+      for (const emote in emoteReplacements) {
+        msg = msg.replaceAll(emote, emoteReplacements[emote])
+      }
+    }
+
+    if (config.shortenLinks) {
+      const linkRegex = /https?:\/\/(.*?)\/.*?( |$)/
+      let linkMatch = msg.match(linkRegex)
+      while (linkMatch) {
+        console.log(`replacing the link in ${msg} with ${linkMatch[1]}`)
+        msg = msg.replace(linkRegex, linkMatch[1] + ' ')
+        console.log(`result of replacement: ${msg}`)
+        linkMatch = msg.match(linkRegex)
       }
     }
 
