@@ -5,7 +5,8 @@ const emotes = {
     '<3': 'heart',
     'MercyWing1 PurpleStar MercyWing2': 'SwagStar',
     'LUL': 'hahaha',
-    'GivePLZ PraiseIt TakeNRG': 'Helix'
+    'GivePLZ PraiseIt TakeNRG': 'HelixPower',
+    'themig149': 'zushi',
 }
 
 export default emotes
