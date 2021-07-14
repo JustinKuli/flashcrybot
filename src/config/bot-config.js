@@ -12,6 +12,7 @@ const props = {
     denylist: [
         'flashcrybot',
         'zbarfbot',
+        'botoftakeout',
     ],
 
     // Simple commands are just calls and responses.

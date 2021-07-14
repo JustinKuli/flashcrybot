@@ -2,6 +2,11 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app). Why does a twitch bot need React? Running in a browser makes it much easier to do the text-to-speech, and provides a (debatably) better interface if logs or other info is needed. Currently it also takes config info from a form in the browser, but that might change.
 
+By default the React app will run on port `3000`. If you need to run it on another port (for example, if another app is using that port), export a different value in the `PORT` variable before starting. For example:
+```bash
+PORT=9001 npm start
+```
+
 The rest of this readme is from the React starter thing.
 
 ## Available Scripts
