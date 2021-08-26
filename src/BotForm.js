@@ -91,7 +91,9 @@ function handleMessage(chat, translator) {
           }
           translator.translate(msg, 'en').then((trans) => {
             chat.say(chan, `(${det.language} -> en) ${user}: ${trans[0]}`)
-            tts(user, trans[0], 'en')
+            if (config.repeatInEnglish){
+              tts(user, trans[0], 'en')
+            }
           })
         } else {
           tts(user, msg, 'en')
