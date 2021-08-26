@@ -21,6 +21,7 @@ const props = {
     ],
 
     // More complicated properties (for advanced users):
+    skipTTSRegex: /^!/m, // will skip reading comments that start with !
     reqLangDetectionConfidence: 0.0,
     targetVoiceCount: 5,
 

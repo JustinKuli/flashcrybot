@@ -37,6 +37,10 @@ function handleMessage(chat, translator) {
       console.log(`message is too long to read out loud: ${msg}`)
       return
     }
+    if (msg.match(config.skipTTSRegex)) {
+      console.log(`message skipped by matching regex: ${msg}`)
+      return
+    }
 
     const phraseWords = config.ttsSayUser ? `${user} - ${msg}` : msg
     let phrase = new SpeechSynthesisUtterance(phraseWords)
